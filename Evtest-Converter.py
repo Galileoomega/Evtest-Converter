@@ -56,19 +56,19 @@ def fileOpenning(filePath):
     tempPressEvent = re.sub("\(ABS_MT_.............", "", tempPressEvent)
     tempPressEvent = re.sub("Event code.*", "", tempPressEvent)
     tempPressEvent = re.sub(".*SYN_REPORT.*", "", tempPressEvent)
-    tempPressEvent = re.sub(".*code 58.*", "", tempPressEvent)
+    #tempPressEvent = re.sub(".*code 58.*", "", tempPressEvent)
+    
     #Find relevant data
-
-    pressList = re.findall("Event: time..................|code 57.*|code 53.*|code 54.*|code 47.*", tempPressEvent)
+    pressList = re.findall("Event: time..................|code 57.*|code 53.*|code 54.*|code 47.*|code 58.*", tempPressEvent)
 
     cleanData = []
     
     for u in pressList:
-      u = re.sub("code | value| alue| time", "", u)
+      u = re.sub("code | value| alue| time| lue", "", u)
       u = re.sub("Event: ", "", u)
 
       if len(u) > 8:
-            u = datetime.datetime.fromtimestamp(float(u)).isoformat()
+        u = datetime.datetime.fromtimestamp(float(u)).isoformat()
 
       cleanData += re.split("\s", u)
 
@@ -213,13 +213,13 @@ while writingPermission:
 
   # LIST OF CODES
   for item in cleanData:
-    if item == "57" or item == "54" or item == "53":
+    if item == "57" or item == "54" or item == "53" or item == "58":
       listOfCodes.append(item)
   
   # LIST OF VALUE
   for item in cleanData:
     if len(item) < 8:
-      if item != "57" and item != "54" and item != "53":
+      if item != "57" and item != "54" and item != "53" and item != "58":
         listOfValues.append(item)
 
   try:
