@@ -175,7 +175,9 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
           stopSpace = True
 
         if xAdded == False and yAdded == True and stopSpace == False:
-          coordinatesOfLayer.append("")
+          if oldX != "" and oldY != "":
+            coordinatesOfLayer.append(oldX)
+            coordinatesOfLayer.append(oldY)
           stopSpace = False
 
         if stopSpace:
