@@ -64,10 +64,11 @@ def fileOpenning(filePath):
     cleanData = []
     
     for u in pressList:
-      u = re.sub("code | value| alue| time| lue", "", u)
+      u = re.sub("value | alue| time| lue", "", u)
+      u = re.sub("code ", "c", u)
       u = re.sub("Event: ", "", u)
 
-      if len(u) > 8:
+      if len(u) > 13:
         u = datetime.datetime.fromtimestamp(float(u)).isoformat()
 
       cleanData += re.split("\s", u)
@@ -121,7 +122,7 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
 
   while makingListOfCoordinate:
     try:
-      if finalListOfData[loopList] == "53":
+      if finalListOfData[loopList] == "c53":
         if not(xAdded):
           coordinatesOfLayer.append(finalListOfData[loopList + 1])
           oldX = finalListOfData[loopList + 1]
@@ -132,7 +133,7 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
           indexChange = True
           yAdded = True
           xAdded = False
-      elif finalListOfData[loopList] == "54":
+      elif finalListOfData[loopList] == "c54":
         if not(yAdded):
           coordinatesOfLayer.append(finalListOfData[loopList + 1])
           oldY = finalListOfData[loopList + 1]
@@ -143,9 +144,6 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
           xAdded = True
           yAdded = False
           indexChange = True
-      else:
-        coordinatesOfLayer.append("")
-        coordinatesOfLayer.append("")
         
       
       if indexChange:
@@ -187,9 +185,15 @@ while writingPermission:
   # Remove useless data 
   cleanData = fileOpenning(filePath)
 
+
   for u in cleanData:
     if len(u) < 8: 
       cleanDataWithoutTime.append(u)
+
+  # DEBUG
+  with open("C:\\Users\\alexi\\Desktop\\Work\\Work\\1ere annee\\Python\\EvTest-Converter\\Output-Files\\cleanData.txt", 'w+') as f:
+    for u in cleanDataWithoutTime:
+      f.write(u + "\n")
 
   coordinatesOfLayer = whereToDrawLine(cleanDataWithoutTime, coordinatesOfLayer)
   
@@ -213,14 +217,24 @@ while writingPermission:
 
   # LIST OF CODES
   for item in cleanData:
-    if item == "57" or item == "54" or item == "53" or item == "58":
+    if item == "c57" or item == "c54" or item == "c53" or item == "c58":
       listOfCodes.append(item)
   
   # LIST OF VALUE
-  for item in cleanData:
-    if len(item) < 8:
-      if item != "57" and item != "54" and item != "53" and item != "58":
-        listOfValues.append(item)
+  loopValue = 0
+  addingValue = True
+
+  while addingValue:
+    try:
+      item = cleanDataWithoutTime[loopValue]
+    except IndexError:
+      break
+
+    if item != 'c57' and item != 'c54' and item != 'c53' and item != 'c58':
+      listOfValues.append(cleanDataWithoutTime[loopValue])
+    
+    loopValue += 1
+
 
   try:
     # Convert all data to a CSV format and write it to a file
