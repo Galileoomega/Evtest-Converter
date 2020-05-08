@@ -78,13 +78,14 @@ def fileOpenning(filePath):
 def convertDataToCsv(listOfTimestamp, listOfCodes, listOfValues, listOfX, listOfY):
   # Writing these data to an excel sheet
   with open(outputFilePath, 'w+', newline='') as f:
+    print(len(listOfTimestamp), len(listOfCodes), len(listOfValues), len(listOfX), len(listOfY))
     fieldnames = ['FullTime', 'DateHour', 'hour', 'Code', 'Value', 'X', 'Y']
     theWriter = csv.DictWriter(f, fieldnames=fieldnames)
 
     theWriter.writeheader()
 
-    for time, code, value, x, y in zip(listOfTimestamp, listOfCodes, listOfValues, listOfX, listOfY):
-      theWriter.writerow({'FullTime': time, 'Code': code, 'Value': value, 'X': x, 'Y': y})
+    for time, code, value in zip(listOfTimestamp, listOfCodes, listOfValues):
+      theWriter.writerow({'FullTime': time, 'Code': code, 'Value': value, 'X': "", 'Y': ""})
 
 def getNameOfFile(filePath, count, myFileName):
   iHaveMyFile = False
@@ -122,12 +123,15 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
 
   while makingListOfCoordinate:
     try:
+      # Try to found if its a X position
       if finalListOfData[loopList] == "c53":
+        # If its not already added 
         if not(xAdded):
           coordinatesOfLayer.append(finalListOfData[loopList + 1])
           oldX = finalListOfData[loopList + 1]
           xAdded = True
           yAdded = False
+        # If it already added
         else:
           coordinatesOfLayer.append(oldY)
           indexChange = True
@@ -143,9 +147,12 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
           coordinatesOfLayer.append(oldX)
           xAdded = True
           yAdded = False
-          indexChange = True
-        
-      
+          indexChange = True   
+      else:
+        pass
+        #coordinatesOfLayer.append("")
+        #coordinatesOfLayer.append("")
+
       if indexChange:
         indexChange = False
       else:
@@ -186,21 +193,16 @@ while writingPermission:
   cleanData = fileOpenning(filePath)
 
 
+  # LIST OF ALL DATA BUT WITHOUT TIME
   for u in cleanData:
     if len(u) < 8: 
       cleanDataWithoutTime.append(u)
 
-  # DEBUG
-  with open("C:\\Users\\alexi\\Desktop\\Work\\Work\\1ere annee\\Python\\EvTest-Converter\\Output-Files\\cleanData.txt", 'w+') as f:
-    for u in cleanDataWithoutTime:
-      f.write(u + "\n")
 
   coordinatesOfLayer = whereToDrawLine(cleanDataWithoutTime, coordinatesOfLayer)
-  
 
   # LIST OF X AND Y
   while makingCoordinates:
-
     try:
       listOfX.append(coordinatesOfLayer[loopList])
       listOfY.append(coordinatesOfLayer[loopList + 1])
