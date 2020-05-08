@@ -84,8 +84,8 @@ def convertDataToCsv(listOfTimestamp, listOfCodes, listOfValues, listOfX, listOf
 
     theWriter.writeheader()
 
-    for time, code, value in zip(listOfTimestamp, listOfCodes, listOfValues):
-      theWriter.writerow({'FullTime': time, 'Code': code, 'Value': value, 'X': "", 'Y': ""})
+    for time, code, value, x, y in zip(listOfTimestamp, listOfCodes, listOfValues, listOfX, listOfY):
+      theWriter.writerow({'FullTime': time, 'Code': code, 'Value': value, 'X': x, 'Y': y})
 
 def getNameOfFile(filePath, count, myFileName):
   iHaveMyFile = False
@@ -120,6 +120,7 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
   oldY = ""
   makingListOfCoordinate = True
   loopList = 0    
+  stopSpace = False
 
   while makingListOfCoordinate:
     try:
@@ -134,12 +135,24 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
         # If it already added
         else:
           coordinatesOfLayer.append(oldY)
+
+          # When duo is complete
+          #coordinatesOfLayer.append(oldX)
+          #coordinatesOfLayer.append(oldY)
+
           indexChange = True
           yAdded = True
           xAdded = False
       elif finalListOfData[loopList] == "c54":
         if not(yAdded):
+
           coordinatesOfLayer.append(finalListOfData[loopList + 1])
+
+          # When duo is complete
+          coordinatesOfLayer.append(oldX)
+          coordinatesOfLayer.append(finalListOfData[loopList + 1])
+
+
           oldY = finalListOfData[loopList + 1]
           yAdded = True
           xAdded = False
@@ -149,9 +162,24 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
           yAdded = False
           indexChange = True   
       else:
-        pass
-        #coordinatesOfLayer.append("")
-        #coordinatesOfLayer.append("")
+        if xAdded and not(yAdded):
+          coordinatesOfLayer.append(oldY)
+
+          # When duo is complete
+          #coordinatesOfLayer.append(oldX)
+          #coordinatesOfLayer.append(oldY)
+
+          indexChange = True
+          yAdded = True
+          xAdded = False
+          stopSpace = True
+
+        if xAdded == False and yAdded == True and stopSpace == False:
+          coordinatesOfLayer.append("")
+          stopSpace = False
+
+        if stopSpace:
+          stopSpace = False
 
       if indexChange:
         indexChange = False
@@ -160,6 +188,9 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
     except IndexError:
       makingListOfCoordinate = False
 
+  with open("C:\\Users\\alexi\\Desktop\\Work\Work\\1ere annee\\Python\\EvTest-Converter\\Output-Files\\debug.txt", 'w+') as f:
+    for u in coordinatesOfLayer:
+      f.write(u + "\n")
   return coordinatesOfLayer
 
 while writingPermission:
@@ -201,16 +232,36 @@ while writingPermission:
 
   coordinatesOfLayer = whereToDrawLine(cleanDataWithoutTime, coordinatesOfLayer)
 
-  # LIST OF X AND Y
+  cleanCoordinatesOfLayer = []
+  for u in coordinatesOfLayer:
+    if u != "":
+      cleanCoordinatesOfLayer.append(u)
+
+  spaceAdded = False
+
+  # SPLIT coordinateOfLayer
+  # TO A LIST OF X AND Y
   while makingCoordinates:
     try:
-      listOfX.append(coordinatesOfLayer[loopList])
-      listOfY.append(coordinatesOfLayer[loopList + 1])
+      if coordinatesOfLayer[loopList] == "":
+        listOfX.append("")
+        listOfY.append("")
+        spaceAdded = True
+      else:
+        try:
+          listOfX.append(coordinatesOfLayer[loopList])
+          listOfY.append(coordinatesOfLayer[loopList + 1])
+          spaceAdded = False
+        except IndexError:
+          makingCoordinates = False
+          break
     except IndexError:
-      makingCoordinates = False
       break
 
-    loopList += 2
+    if spaceAdded:
+      loopList += 1
+    else:
+      loopList += 2
 
   # LIST OF TIME
   for item in cleanData:
