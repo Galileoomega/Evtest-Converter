@@ -75,17 +75,38 @@ def fileOpenning(filePath):
 
   return cleanData
 
-def convertDataToCsv(listOfTimestamp, listOfCodes, listOfValues, listOfX, listOfY):
+def convertDataToCsv(cleanData):
   # Writing these data to an excel sheet
   with open(outputFilePath, 'w+', newline='') as f:
-    print(len(listOfTimestamp), len(listOfCodes), len(listOfValues), len(listOfX), len(listOfY))
     fieldnames = ['FullTime', 'DateHour', 'hour', 'Code', 'Value', 'X', 'Y']
     theWriter = csv.DictWriter(f, fieldnames=fieldnames)
 
     theWriter.writeheader()
 
-    for time, code, value, x, y in zip(listOfTimestamp, listOfCodes, listOfValues, listOfX, listOfY):
-      theWriter.writerow({'FullTime': time, 'Code': code, 'Value': value, 'X': x, 'Y': y})
+    addingData = True
+    loopValue = 0
+
+    while addingData:
+
+      # Check if error happenned
+      try:
+        if len(cleanData[loopValue]) < 10:
+          break
+        if len(cleanData[loopValue + 1]) > 5 or len(cleanData[loopValue + 3]) > 5:
+          break
+      except IndexError:
+        break
+
+
+      try:
+        theWriter.writerow(
+          {
+          'FullTime': cleanData[loopValue], 'Code': cleanData[loopValue + 1], 'Value': cleanData[loopValue + 2], 'X': cleanData[loopValue + 3], 'Y': cleanData[loopValue + 4]
+          })
+      except IndexError:
+        break
+
+      loopValue += 5
 
 def getNameOfFile(filePath, count, myFileName):
   iHaveMyFile = False
@@ -113,87 +134,64 @@ def getNameOfFile(filePath, count, myFileName):
   return finalFileName
 
 def whereToDrawLine(finalListOfData, coordinatesOfLayer):
+  
+  loopList = 0
   xAdded = False
   yAdded = True
-  indexChange = False
   oldX = ""
   oldY = ""
-  makingListOfCoordinate = True
-  loopList = 0    
-  stopSpace = False
 
-  while makingListOfCoordinate:
+  while True:
     try:
-      # Try to found if its a X position
-      if finalListOfData[loopList] == "c53":
-        # If its not already added 
-        if not(xAdded):
-          coordinatesOfLayer.append(finalListOfData[loopList + 1])
-          oldX = finalListOfData[loopList + 1]
-          xAdded = True
-          yAdded = False
-        # If it already added
-        else:
-          coordinatesOfLayer.append(oldY)
-
-          # When duo is complete
-          #coordinatesOfLayer.append(oldX)
-          #coordinatesOfLayer.append(oldY)
-
-          indexChange = True
-          yAdded = True
-          xAdded = False
-      elif finalListOfData[loopList] == "c54":
-        if not(yAdded):
-
-          coordinatesOfLayer.append(finalListOfData[loopList + 1])
-
-          # When duo is complete
-          coordinatesOfLayer.append(oldX)
-          coordinatesOfLayer.append(finalListOfData[loopList + 1])
-
-
-          oldY = finalListOfData[loopList + 1]
-          yAdded = True
-          xAdded = False
-        else:
-          coordinatesOfLayer.append(oldX)
-          xAdded = True
-          yAdded = False
-          indexChange = True   
-      else:
-        if xAdded and not(yAdded):
-          coordinatesOfLayer.append(oldY)
-
-          # When duo is complete
-          #coordinatesOfLayer.append(oldX)
-          #coordinatesOfLayer.append(oldY)
-
-          indexChange = True
-          yAdded = True
-          xAdded = False
-          stopSpace = True
-
-        if xAdded == False and yAdded == True and stopSpace == False:
-          if oldX != "" and oldY != "":
-            coordinatesOfLayer.append(oldX)
-            coordinatesOfLayer.append(oldY)
-          stopSpace = False
-
-        if stopSpace:
-          stopSpace = False
-
-      if indexChange:
-        indexChange = False
-      else:
-        loopList += 2
+      item = finalListOfData[loopList]
+      secondItem = finalListOfData[loopList + 1]
     except IndexError:
-      makingListOfCoordinate = False
+      break
 
-  with open("C:\\Users\\alexi\\Desktop\\Work\Work\\1ere annee\\Python\\EvTest-Converter\\Output-Files\\debug.txt", 'w+') as f:
-    for u in coordinatesOfLayer:
-      f.write(u + "\n")
+    if item == 'c53':
+
+      xAdded = True
+
+      # Try to look if after theres a code 54
+      if finalListOfData[loopList + 2] == 'c54':
+        xAdded = True
+      else:
+        if xAdded:
+          coordinatesOfLayer.append(oldY)
+        xAdded = False
+
+      coordinatesOfLayer.append(secondItem)
+
+      oldX = secondItem
+
+
+    elif item == 'c54':
+      if xAdded:
+        coordinatesOfLayer.append(secondItem)
+      else:
+        coordinatesOfLayer.append(oldX)
+        coordinatesOfLayer.append(secondItem)
+        xAdded = False
+      oldY = secondItem
+
+      # Does before was a c53 ?
+      if finalListOfData[loopList - 2] == 'c53':
+        coordinatesOfLayer.append(oldX)
+        coordinatesOfLayer.append(oldY)
+        xAdded = False
+
+
+    else:
+      xAdded = False
+      yAdded = False
+      coordinatesOfLayer.append("0")
+    
+    loopList += 2
+  
   return coordinatesOfLayer
+
+
+
 
 while writingPermission:
   
@@ -245,9 +243,9 @@ while writingPermission:
   # TO A LIST OF X AND Y
   while makingCoordinates:
     try:
-      if coordinatesOfLayer[loopList] == "":
-        listOfX.append("")
-        listOfY.append("")
+      if coordinatesOfLayer[loopList] == "0":
+        listOfX.append("0")
+        listOfY.append("0")
         spaceAdded = True
       else:
         try:
@@ -289,11 +287,32 @@ while writingPermission:
       listOfValues.append(cleanDataWithoutTime[loopValue])
     
     loopValue += 1
+  
+  ## ADDING X AND Y TO ORIGINAL LIST
+  addingValue = True
+  valueItem = ""
+  loopValue = 3
+  xIndex = 0
+  yIndex = 0
+  while addingValue:
 
+    if xIndex > len(listOfX):
+      break
+
+    try:
+      cleanData.insert(loopValue, listOfY[yIndex])
+      cleanData.insert(loopValue, listOfX[xIndex])
+    except IndexError:
+      addingValue = False
+      break
+
+    xIndex += 1
+    yIndex += 1
+    loopValue += 5
 
   try:
     # Convert all data to a CSV format and write it to a file
-    convertDataToCsv(listOfTimestamp, listOfCodes, listOfValues, listOfX, listOfY)
+    convertDataToCsv(cleanData)
     writingPermission = False
   except PermissionError:
     print("Can't create the output file, maybe the file is already open in excel.")
