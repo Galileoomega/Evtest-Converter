@@ -139,6 +139,7 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
   xAdded = False
   yAdded = True
   oldX = ""
+  waitOneRound = False
   oldY = ""
 
   while True:
@@ -155,12 +156,20 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
       # Try to look if after theres a code 54
       if finalListOfData[loopList + 2] == 'c54':
         xAdded = True
-      else:
-        if xAdded:
-          coordinatesOfLayer.append(oldY)
+      elif finalListOfData[loopList + 2] == 'c53':
+        coordinatesOfLayer.append(oldX)
+        coordinatesOfLayer.append(oldY)
+        waitOneRound = True
         xAdded = False
+      else:
+        coordinatesOfLayer.append(secondItem)
+        coordinatesOfLayer.append(oldY)
+        waitOneRound = True
 
-      coordinatesOfLayer.append(secondItem)
+      if not(waitOneRound):
+        coordinatesOfLayer.append(secondItem)
+      else:
+        waitOneRound = False
 
       oldX = secondItem
 
@@ -184,7 +193,7 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
     else:
       xAdded = False
       yAdded = False
-      coordinatesOfLayer.append("0")
+      coordinatesOfLayer.append("")
     
     loopList += 2
   
@@ -243,9 +252,9 @@ while writingPermission:
   # TO A LIST OF X AND Y
   while makingCoordinates:
     try:
-      if coordinatesOfLayer[loopList] == "0":
-        listOfX.append("0")
-        listOfY.append("0")
+      if coordinatesOfLayer[loopList] == "":
+        listOfX.append("")
+        listOfY.append("")
         spaceAdded = True
       else:
         try:
