@@ -3,7 +3,7 @@
 #####                   to an Excel Sheet (.CSV)
 ###################################################################
 
-import csv, re, datetime, os
+import csv, re, datetime, os, itertools
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 writingPermission = True
@@ -19,7 +19,6 @@ listIsInPoduction = True
 listOfX = []
 listOfY = []
 loopList = 0
-releaseSeparator = "000000"
 makingCoordinates = True
 cleanDataWithoutTime = []
 
@@ -200,10 +199,8 @@ def whereToDrawLine(finalListOfData, coordinatesOfLayer):
   return coordinatesOfLayer
 
 
-
-
 while writingPermission:
-  
+
   resetVar()
 
   # Retrieve the path of the EvTest file And test if its good
@@ -298,26 +295,9 @@ while writingPermission:
     loopValue += 1
   
   ## ADDING X AND Y TO ORIGINAL LIST
-  addingValue = True
-  valueItem = ""
-  loopValue = 3
-  xIndex = 0
-  yIndex = 0
-  while addingValue:
-
-    if xIndex > len(listOfX):
-      break
-
-    try:
-      cleanData.insert(loopValue, listOfY[yIndex])
-      cleanData.insert(loopValue, listOfX[xIndex])
-    except IndexError:
-      addingValue = False
-      break
-
-    xIndex += 1
-    yIndex += 1
-    loopValue += 5
+  cleanData = list(itertools.chain.from_iterable(
+      (v for v in zip(*([iter(cleanData)] * 3), listOfX, listOfY)),
+      ))
 
   try:
     # Convert all data to a CSV format and write it to a file
